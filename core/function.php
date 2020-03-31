@@ -1,0 +1,176 @@
+<?php
+// Подключаю свою БД 'great_names_of_history'
+function connect()
+{
+	$conn = mysqli_connect(SERVERNAME, USERNAME, PASSWORD, DBNAME);
+	mysqli_set_charset($conn, "utf8");
+	if (!$conn) {
+		die("Connection failed: " . mysqli_connect_error());
+	}
+	return $conn;
+}
+// выбираю все данные из БД т.е из таблицы 'phrases'
+function select($conn)
+{
+	$sql = "SELECT * FROM phrases";
+	$result = mysqli_query($conn, $sql);
+	$a = array();
+	if (mysqli_num_rows($result) > 0) {
+		while ($row = mysqli_fetch_assoc($result)) {
+			$a[] = $row;
+		}
+	}
+	return $a;
+}
+
+
+function selectMain($conn){
+    $offset = 0;
+    if (isset($_GET['page']) AND trim($_GET['page'])!=''){
+        $offset = trim($_GET['page']);
+    }
+    $sql = "SELECT * FROM phrases ORDER BY id DESC LIMIT 3 OFFSET ".$offset*3;
+    $result = mysqli_query($conn, $sql);
+    
+    $a = array();
+    if (mysqli_num_rows($result) > 0) {
+        while($row = mysqli_fetch_assoc($result)) {
+            $a[] = $row;
+        }
+    } 
+    return $a;
+}
+
+
+
+
+function selectArticle($conn)
+{
+	$sql = "SELECT * FROM phrases WHERE id=".$_GET['id'];
+	$result = mysqli_query($conn, $sql);
+
+	if (mysqli_num_rows($result) > 0) {
+		$row = mysqli_fetch_assoc($result);
+		return $row;
+	}
+	return false;
+}
+
+
+function paginationCount($conn)
+{
+	$sql = "SELECT * FROM phrases";
+	$result = mysqli_query($conn, $sql);
+	$result = mysqli_num_rows($result);
+	return ceil($result / 3);
+}
+
+
+function getAllTags($conn)
+{
+	$sql = "SELECT DISTINCT(tag) FROM tag";
+	$result = mysqli_query($conn, $sql);
+
+	$a = array();
+	if (mysqli_num_rows($result) > 0) {
+		while ($row = mysqli_fetch_assoc($result)) {
+			$a[] = $row['tag'];
+		}
+	}
+	return $a;
+}
+
+function getArticleTags($conn)
+{
+	$sql = "SELECT * FROM tag WHERE post=" . $_GET['id'];
+	$result = mysqli_query($conn, $sql);
+
+	$a = array();
+	if (mysqli_num_rows($result) > 0) {
+		while ($row = mysqli_fetch_assoc($result)) {
+			$a[] = $row;
+		}
+	}
+	return $a;
+}
+
+function getPostFromTag($conn)
+{
+	$sql = "SELECT post FROM tag WHERE tag='" . $_GET['tag'] . "'";
+	$result = mysqli_query($conn, $sql);
+
+	$a = array();
+	if (mysqli_num_rows($result) > 0) {
+		while ($row = mysqli_fetch_assoc($result)) {
+			$a[] = $row['post'];
+		}
+	}
+	$sql = "SELECT * FROM phrases WHERE id in (" . join(",", $a) . ")";
+	$result = mysqli_query($conn, $sql);
+	$a = array();
+	if (mysqli_num_rows($result) > 0) {
+		while ($row = mysqli_fetch_assoc($result)) {
+			$a[] = $row;
+		}
+	}
+	return $a;
+}
+
+function getPostFromCategory($conn)
+{
+	$sql = "SELECT * FROM phrases WHERE category=" . $_GET['id'];
+	$result = mysqli_query($conn, $sql);
+
+	$a = array();
+	if (mysqli_num_rows($result) > 0) {
+		while ($row = mysqli_fetch_assoc($result)) {
+			$a[] = $row;
+		}
+	}
+	return $a;
+}
+
+
+function getCatInfo($conn)
+{
+	$sql = "SELECT * FROM category WHERE id=" . $_GET['id'];
+	$result = mysqli_query($conn, $sql);
+
+	$a = array();
+	if (mysqli_num_rows($result) > 0) {
+		$row = mysqli_fetch_assoc($result);
+	}
+	return $row;
+}
+
+function getAllCatInfo($conn)
+{
+	$sql = "SELECT * FROM category";
+	$result = mysqli_query($conn, $sql);
+
+	$a = array();
+	if (mysqli_num_rows($result) > 0) {
+		while ($row = mysqli_fetch_assoc($result)) {
+			$a[] = $row;
+		}
+	}
+	return $a;
+}
+
+function deleteArticle($conn, $id)
+{
+	$sql = "DELETE FROM phrases WHERE id=" . $id;
+
+	if (mysqli_query($conn, $sql)) {
+		return true;
+	} else {
+		return "Error deleting record: " . mysqli_error($conn);
+	}
+}
+
+
+// Закрываю свою БД
+function close($conn)
+{
+	mysqli_close($conn);
+}
